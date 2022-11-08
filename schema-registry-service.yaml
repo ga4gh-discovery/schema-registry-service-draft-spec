@@ -1,0 +1,469 @@
+openapi: 3.0.3
+info:
+  title: Schema Registry Service API Draft Specification
+  version: 0.0.1
+  description: |
+    Draft specification for a Schema Registry API. A schema is a standardized, structured representation of an entity, usually written in a standard format such as JSON Schema.
+    
+    Schemas are registered and accessed within a **namespace** -> **repository** -> **schema** hierarchy, where:
+
+    * **namespaces** represent organizations or consortia under which a collection of schemas are published
+    * **repositories** represent a single conceptual data model with multiple versioned releases
+    * **schemas** represent a single versioned release of a conceptual model (the repository it belongs to)
+  license:
+    name: Apache 2.0
+    url: https://raw.githubusercontent.com/DNAstack/schema-registry-service-draft-spec/LICENSE
+  contact:
+    name: Jeremy Adams
+    email: jeremy@dnastack.com
+tags:
+  - name: Namespaces API
+    description: Request information about registered namespaces
+    externalDocs:
+      url: https://github.com/dnastack/schema-registry-service-draft-spec
+  - name: Schemas API
+    description: Request information about registered schemas
+    externalDocs:
+      url: https://github.com/dnastack/schema-registry-service-draft-spec
+security:
+  - bearerAuth: []
+paths:
+  /service-info:
+    $ref: https://raw.githubusercontent.com/ga4gh-discovery/ga4gh-service-info/v1.0.0/service-info.yaml#/paths/~1service-info
+  /namespaces:
+    get:
+      summary: List namespaces
+      operationId: listNamespaces
+      description: List all namespaces
+      tags:
+        - Namespaces API
+      responses:
+        '200':
+          description: List of namespaces retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Namespace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/Error'
+  /namespaces/{namespace_id}:
+    get:
+      summary: Get Namespace
+      operationId: getNamespace
+      description: Get a single namespace by its unique ID
+      tags:
+        - Namespaces API
+      parameters:
+        - $ref: '#/components/parameters/namespaceId'
+      responses:
+        '200':
+          description: Successfully retrieved namespace with the requested ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Namespace'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/Error'
+  /schemas:
+    get:
+      summary: List schema repositories
+      operationId: listSchemaRepositories
+      description: List all schema repositories across all namespaces
+      tags:
+        - Schemas API
+      responses:
+        '200':
+          description: List of schema repositories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SchemaRepository'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/Error'
+  /schemas/{namespace_id}/{repository_name}:
+    get:
+      summary: Get Schema Repository
+      operationId: getSchemaRepository
+      description: Get a single schema repository under the requested namespace and repository name
+      tags:
+        - Schemas API
+      parameters:
+        - $ref: '#/components/parameters/namespaceId'
+        - $ref: '#/components/parameters/repositoryName'
+      responses:
+        '200':
+          description: Successfully retrieved schema repository with the requested namespace ID and repository name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaRepository'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/Error'
+  /schemas/{namespace_id}/{repository_name}/{version}:
+    get:
+      summary: Get Schema
+      operationId: getSchema
+      description: Get a single schema under the requested namespace, repository name, and version
+      tags:
+        - Schemas API
+      parameters:
+        - $ref: '#/components/parameters/namespaceId'
+        - $ref: '#/components/parameters/repositoryName'
+        - $ref: '#/components/parameters/version'
+      responses:
+        '200':
+          description: Successfully retrieved schema repository with the requested namespace ID, repository name, and version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schema'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/Error'
+  /schemas/{namespace_id}/{repository_name}/{version}/{format}:
+    get:
+      summary: Get raw schema definition
+      operationId: getRawSchema
+      description: Get the raw JSON schema definition (in JSON or YAML) for the schema at the requested namespace, repository, and version
+      tags:
+        - Schemas API
+      parameters:
+        - $ref: '#/components/parameters/namespaceId'
+        - $ref: '#/components/parameters/repositoryName'
+        - $ref: '#/components/parameters/version'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: Successfully retrieved the raw JSON schema definition for the schema at the requested namespace, repository, and version
+          content:
+            application/json:
+              example: |
+                {
+                  "$id": "https://registry.schemas.dnastack.com/dnastack/sars-cov-2-voc/1.0.0/json",
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "title": "SARS-CoV-2 VoC",
+                  "type": "object",
+                  "properties": {
+                    "variant_name": {
+                      "type": "string",
+                      "description": "Variant official name",
+                      "example": "omicron"
+                    },
+                    "detected_date": {
+                      "type": "string",
+                      "description": "timestamp indicating date of first detection in YYYY-mm-dd format",
+                      "example": "2022-11-19"
+                    }
+                  },
+                  "required": [
+                    "variant_name",
+                    "detected_date"
+                  ]
+                }
+            text/vnd.yaml:
+              example: | 
+                $id: "https://registry.schemas.dnastack.com/dnastack/sars-cov-2-voc/1.0.0/yaml"
+                $schema: "https://json-schema.org/draft/2020-12/schema"
+                title: SARS-CoV-2 VoC
+                type: object
+                properties:
+                  variant_name:
+                    type: string
+                    description: Variant official name
+                    example: omicron
+                  detected_date:
+                    type: string
+                    description: timestamp indicating date of first detection in YYYY-mm-dd format
+                    example: '2022-11-19'
+                required:
+                  - variant_name
+                  - detected_date
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        default:
+          $ref: '#/components/responses/Error'
+components:
+  parameters:
+    namespaceId:
+      name: namespace_id
+      in: path
+      required: true
+      description: Namespace ID
+      schema:
+        type: string
+    repositoryName:
+      name: repository_name
+      in: path
+      required: true
+      description: Name of the schema repository
+      schema:
+        type: string
+    version:
+      name: version
+      in: path
+      required: true
+      description: Version number of the released schema
+      schema:
+        type: string
+    format:
+      name: format
+      in: path
+      required: true
+      description: File format of the requested schema
+      schema:
+        type: string
+        enum:
+          - json
+          - yaml
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    BadRequest:
+      description: 'HTTP Bad Request ([RFC 7231 Section 6.5.1](https://tools.ietf.org/html/rfc7231#section-6.5.1))'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: 'Unauthorized ([RFC 7235](https://tools.ietf.org/html/rfc7235))'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: 'Forbidden ([RFC 7231](https://tools.ietf.org/html/rfc7231))'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: 'Not found ([RFC 7231](https://tools.ietf.org/html/rfc7231))'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: 'Internal server error ([RFC 7231](https://tools.ietf.org/html/rfc7231))'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Error:
+      description: 'Unexpected error ([RFC 7231](https://tools.ietf.org/html/rfc7231))'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Namespace:
+      type: object
+      description: Organizational unit containing a collection of schemas. A namespace typically pertains to an organization, but can also be used to represent an individual user/researcher or a consortium.
+      required:
+        - namespace_id
+        - full_name
+        - description
+        - url
+      properties:
+        namespace_id:
+          type: string
+          description: Unique identifier for the namespace
+          example: dnastack
+        short_name:
+          type: string
+          description: Acronym, initialism, or otherwise shortened version of organization's name
+        full_name:
+          type: string
+          description: Full name of the organization or body behind the namespace
+          example: DNAstack
+        description:
+          type: string
+          description: Short description of the organization or body that created the namespace, such as company profile
+          example: Our software connects a global community of precision medicine initiatives, research consortiums, patient advocacy groups, hospitals, startups, funders, pharma companies, and governments to accelerate collaborative discoveries in genomics and health.
+        url:
+          type: string
+          description: Homepage or documentation URL of the organization or body
+          example: https://dnastack.com
+        schema_repositories:
+          type: array
+          description: List of schema repositories maintained by the organization within the namespace
+          items:
+            $ref: "#/components/schemas/SchemaRepository"
+        tags:
+          $ref: "#/components/schemas/Tags"
+    SchemaRepository:
+      type: object
+      description: Represents a repository for a single conceptual data model or schema. A single Schema Repository entity is considered a repository as it can hold multiple revisions/versions of the same conceptual entity
+      required:
+        - namespace_id
+        - repository_name
+        - description
+      properties:
+        namespace_id:
+          type: string
+          description: Namespace ID of the namespace that this schema repository belongs to 
+          example: dnastack
+        repository_name:
+          type: string
+          description: Name of the schema repostory. Must be unique within the namespace
+          example: sars-cov-2-voc
+        description:
+          type: string
+          description: Short description of the model and what it is supposed to represent
+          example: A SARS-CoV-2 variant of concern
+        schemas:
+          type: array
+          description: List of released versions/revisions of the schema
+          items:
+            $ref: "#/components/schemas/Schema"
+        authors:
+          type: array
+          description: List of individual or group authors that developed the schema
+          items:
+            $ref: "#/components/schemas/Author"
+        tags:
+          $ref: "#/components/schemas/Tags"
+    Schema:
+      type: object
+      description: A versioned release of the conceptual model as a schema. Schema is written in JSON schema (JSON and/or YAML representation)
+      required:
+        - namespace_id
+        - repository_name
+        - version
+        - changelog
+        - formats
+      properties:
+        namespace_id:
+          type: string
+          description: Namespace ID of the namespace that this schema belongs to
+          example: dnastack
+        repository_name:
+          type: string
+          description: Name of the schema repository that this schema belongs to
+          example: sars-cov-2-voc
+        version:
+          type: string
+          description: Version number of the release
+          example: 1.0.0
+        changelog:
+          type: array
+          items:
+            type: string
+          description: High-level list of changes made in this release compared to the previous version
+          example:
+            - Added field 'variant_name'
+            - Added field 'detected_date'
+        formats:
+          type: array
+          items:
+            type: string
+            enum:
+              - json
+              - yaml
+          description: |
+            The file format(s) that the schema is represented in.
+
+            **Allowed Values:**
+            * `json` - schema is available in JSON schema (JSON format)
+            * `yaml` - schema is available in JSON schema (YAML format)
+          example:
+            - json
+            - yaml
+    Author:
+      type: object
+      description: An individual or group who created, maintained, or otherwise contributed to a schema
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of contributing individual or group
+          example: DNAstack developers
+        url:
+          type: string
+          description: Homepage or documentation URL of the contributing individual or group
+          example: https://dnastack.com
+    Tags:
+      type: object
+      description: Key-Value metadata tags for a namespace or schema. Enables simple search and filtering. A tag can be key only (i.e. value left blank) if the presence of a tag is sufficient.
+      example:
+        disease: COVID-19
+        COVID-19: ""
+    Error:
+      type: object
+      required:
+        - status
+        - title
+      properties:
+        status:
+          type: integer
+          format: int32
+          description: |
+            HTTP status code (as per [RFC 7231](https://tools.ietf.org/html/rfc7231)) generated by the server for this occurrence of the problem.
+            This must match the status code in the actual HTTP response. Used for convenience of clients (e.g. to determine what the original status code was in cases where it has been changed by an intermediary or cache or when message bodies persist without HTTP information).
+          example: '500'
+        title:
+          type: string
+          description: |
+            A short, human-readable description of the error.
+            The value should not change from occurrence to occurrence of an error, except for purposes of localization.
+          example: 'Internal server error'
+        message:
+          type: string
+          description: 'A human-readable explanation specific to this occurrence of the error.'
+          example: 'Internal server error'
